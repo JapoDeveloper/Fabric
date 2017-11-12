@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Fabric</string>
+    <string name="successful_login_message">Welcome to Fabric!</string>
+    <string name="sign_out">Sign out</string>
 </resources>
