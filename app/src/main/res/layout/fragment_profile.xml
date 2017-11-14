@@ -1,0 +1,60 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    tools:context="co.japo.fabric.ui.fragments.ProfileFragment">
+
+    <ImageView
+        android:id="@+id/profile_userPhoto"
+        android:layout_width="@dimen/user_photo_size_lg"
+        android:layout_height="@dimen/user_photo_size_lg"
+        android:src="@mipmap/ic_launcher"/>
+
+    <TextView
+        android:id="@+id/profile_userName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:text="User name here"/>
+
+    <TextView
+        android:id="@+id/profile_userEmail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Email here"
+        android:textAlignment="center"/>
+
+    <TextView
+        android:id="@+id/profile_userPhoneNumber"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Phone here"
+        android:textAlignment="center"/>
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/space_md" />
+
+    <TextView
+        android:id="@+id/profile_userLevel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:text="Level here"/>
+
+    <TextView
+        android:id="@+id/profile_userPoints"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:text="Points here"/>
+
+    <TextView
+        android:id="@+id/profile_userChallengesCount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:text="Challenges count here"/>
+</LinearLayout>
