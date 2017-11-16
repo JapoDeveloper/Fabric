@@ -12,7 +12,7 @@ public class UserModel {
     public String phoneNumber;
     public float earnedPoints;
     public int challengesCompleted;
-    public int level;
+    public String level;
 
     public UserModel(){
 
@@ -25,7 +25,7 @@ public class UserModel {
         this.phoneNumber = null;
         this.earnedPoints = 0f;
         this.challengesCompleted = 0;
-        this.level = 1;
+        this.level = "";
     }
 
     public UserModel(String name, String email, String photoUrl, String phoneNumber){
@@ -35,7 +35,7 @@ public class UserModel {
         this.phoneNumber = phoneNumber;
         this.earnedPoints = 0f;
         this.challengesCompleted = 0;
-        this.level = 1;
+        this.level = "";
     }
 
     @Override

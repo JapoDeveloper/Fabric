@@ -19,4 +19,19 @@
     <string name="topics">Topics</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
+    <string name="championships">Championships</string>
+    <string name="close">Close</string>
+    <string name="multiple_choice">Multiple Choice</string>
+    <string name="single_choice">Single choice</string>
+    <string name="show_image">Show image</string>
+    <string name="show_text">Show text</string>
+    <string name="challenge_description_hint">Enter challenge description</string>
+    <string name="challenge_solution_explanation_hint">Enter a explanation of the solution</string>
+    <string name="challenge_option_hint">Enter an answer</string>
+    <string name="type">Type</string>
+    <string name="presentation_type">Present</string>
+    <string name="select_a_level">Pick a level</string>
+    <string name="camera">Camera</string>
+    <string name="gallery">Gallery</string>
+    <string name="addOption">Add answer</string>
 </resources>

@@ -1,0 +1,51 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    tools:context="co.japo.fabric.ui.fragments.TakeChallengeFragment">
+<LinearLayout
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/activity_horizontal_margin">
+        <TextView
+            android:id="@+id/challengeLevel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Level"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"/>
+
+        <TextView
+            android:id="@+id/challengePoints"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Points"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"/>
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/challengePhoto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:src="@drawable/default_avatar"/>
+
+    <TextView
+        android:id="@+id/challengeDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Description text"/>
+
+    <FrameLayout
+        android:id="@+id/challengeOptions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+    </FrameLayout>
+
+    </LinearLayout>
+</ScrollView>

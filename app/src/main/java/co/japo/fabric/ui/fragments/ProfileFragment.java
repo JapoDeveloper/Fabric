@@ -42,7 +42,7 @@ public class ProfileFragment extends Fragment {
         ((TextView) view.findViewById(R.id.profile_userName)).setText(mUserInfo.name);
         ((TextView) view.findViewById(R.id.profile_userEmail)).setText(mUserInfo.email);
         ((TextView) view.findViewById(R.id.profile_userPhoneNumber)).setText(mUserInfo.phoneNumber);
-        ((TextView) view.findViewById(R.id.profile_userLevel)).setText(mUserInfo.level+"");
+        ((TextView) view.findViewById(R.id.profile_userLevel)).setText(mUserInfo.level);
         ((TextView) view.findViewById(R.id.profile_userPoints)).setText(mUserInfo.earnedPoints+"");
         ((TextView) view.findViewById(R.id.profile_userChallengesCount)).setText(mUserInfo.challengesCompleted+"");
 

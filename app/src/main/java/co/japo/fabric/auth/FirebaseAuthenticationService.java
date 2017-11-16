@@ -58,6 +58,7 @@ public class FirebaseAuthenticationService {
                     from.startActivityForResult(
                             AuthUI.getInstance()
                                     .createSignInIntentBuilder()
+                                    .setIsSmartLockEnabled(false)
                                     .setAvailableProviders(
                                             Arrays.asList(
                                                     new AuthUI.IdpConfig.Builder(AuthUI.EMAIL_PROVIDER).build(),

@@ -1,14 +1,18 @@
 package co.japo.fabric.ui.activities;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
+import android.provider.ContactsContract;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 
 import com.firebase.ui.auth.AuthUI;
@@ -19,12 +23,15 @@ import co.japo.fabric.Constants;
 import co.japo.fabric.R;
 import co.japo.fabric.auth.FirebaseAuthenticationService;
 import co.japo.fabric.database.UserDatabaseService;
+import co.japo.fabric.interfaces.Displayable;
+import co.japo.fabric.ui.fragments.ChallengesFragment;
+import co.japo.fabric.ui.fragments.CreateChallengeFragment;
 import co.japo.fabric.ui.fragments.ProfileFragment;
 import co.japo.fabric.ui.fragments.TopicsFragment;
 import co.japo.fabric.ui.util.ViewRefactor;
 
 public class MainActivity extends AppCompatActivity
-    implements NavigationView.OnNavigationItemSelectedListener{
+    implements NavigationView.OnNavigationItemSelectedListener, Displayable{
 
     private Toolbar mToolbar;
     private NavigationView mNavigationView;
@@ -32,6 +39,8 @@ public class MainActivity extends AppCompatActivity
     private FirebaseAuth mFirebaseAuth;
     private FirebaseDatabase mFirebaseDatabase;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
+
+    private Fragment mCurrentFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,11 +66,19 @@ public class MainActivity extends AppCompatActivity
         //Initialize Firebase listeners
         mAuthStateListener = FirebaseAuthenticationService.getInstance().getFirebaseAuthStateListener(this);
 
+        ChallengesFragment fragment = new ChallengesFragment();
+        fragment.setDisplayable(this);
+
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.contentFrame, fragment,"ChallengesFragment")
+                .addToBackStack(null)
+                .commit();
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
         if(requestCode == Constants.RC_SIGN_IN){
             if(resultCode == RESULT_CANCELED){
                 finish();
@@ -71,7 +88,6 @@ public class MainActivity extends AppCompatActivity
                 );
             }
         }
-
     }
 
     @Override
@@ -110,6 +126,8 @@ public class MainActivity extends AppCompatActivity
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.contentFrame,new ProfileFragment(),"ProfileFragment")
                         .commit();
+
+                mToolbar.setTitle(R.string.account);
                 break;
             case R.id.nav_topics:
                 getSupportFragmentManager().beginTransaction()
@@ -120,6 +138,15 @@ public class MainActivity extends AppCompatActivity
                 mToolbar.setTitle(R.string.topics);
                 break;
             case R.id.nav_challenges:
+                ChallengesFragment fragment = new ChallengesFragment();
+                fragment.setDisplayable(this);
+
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.contentFrame,fragment,"ChallengesFragment")
+                        .addToBackStack(null)
+                        .commit();
+
+                mToolbar.setTitle(R.string.challenges);
                 break;
         }
 
@@ -128,4 +155,25 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    @Override
+    public void display(Class classType, String from, Bundle bundle) {
+
+        try {
+            Object instance = classType.newInstance();
+            if(instance instanceof Fragment){
+                mCurrentFragment = (Fragment) instance;
+                if(bundle != null) {
+                    mCurrentFragment.setArguments(bundle);
+                }
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.contentFrame,mCurrentFragment)
+                        .addToBackStack(from)
+                        .commit();
+            }
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
 }
