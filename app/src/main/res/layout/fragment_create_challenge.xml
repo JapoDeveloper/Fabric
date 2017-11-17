@@ -1,11 +1,14 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:layout_margin="@dimen/activity_vertical_margin"
+    android:fitsSystemWindows="true"
     tools:context="co.japo.fabric.ui.fragments.CreateChallengeFragment">
-
+<LinearLayout
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
     <GridLayout
         android:columnCount="2"
         android:layout_width="match_parent"
@@ -84,11 +87,15 @@
         android:layout_weight="2"/>
     </LinearLayout>
 
+    <android.support.design.widget.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
     <EditText
         android:id="@+id/challengeDescriptionInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/challenge_description_hint"/>
+    </android.support.design.widget.TextInputLayout>
 
     <LinearLayout
         android:orientation="vertical"
@@ -113,9 +120,9 @@
 
         <ImageView
             android:id="@+id/challengePhotoPreview"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:src="@drawable/default_avatar"/>
+            style="@style/thumbnail_lg"
+            android:src="@drawable/default_avatar"
+            android:scaleType="fitCenter"/>
     </LinearLayout>
 
     <FrameLayout
@@ -125,9 +132,14 @@
 
     </FrameLayout>
 
+    <android.support.design.widget.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
     <EditText
         android:id="@+id/challengeSolutionExplanationInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/challenge_solution_explanation_hint"/>
+    </android.support.design.widget.TextInputLayout>
 </LinearLayout>
+</ScrollView>

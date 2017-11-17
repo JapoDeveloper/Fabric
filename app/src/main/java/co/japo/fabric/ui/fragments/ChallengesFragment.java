@@ -71,6 +71,7 @@ public class ChallengesFragment extends Fragment implements DataSetUpdatable {
         mChallengesAdapter.notifyDataSetChanged();
     }
 
+
     private class ChallengesAdapter extends RecyclerView.Adapter<ChallengesViewHolder>{
         private Map<String,ChallengeModel> mChallenges;
 

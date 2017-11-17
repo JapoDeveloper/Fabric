@@ -22,4 +22,22 @@
         <item name="android:layout_gravity">center_vertical</item>
         <item name="android:textStyle">bold</item>
     </style>
+
+    <style name="thumbnail_lg">
+        <item name="android:layout_width">300dp</item>
+        <item name="android:layout_height">300dp</item>
+        <item name="android:layout_gravity">center</item>
+    </style>
+
+    <style name="submitButton">
+        <item name="android:background">#169C5E</item>
+        <item name="android:padding">4dp</item>
+        <item name="android:layout_width">140dp</item>
+        <item name="android:layout_height">42dp</item>
+    </style>
+
+    <style name="statisticalLabels">
+        <item name="android:gravity">center</item>
+        <item name="android:textStyle">bold</item>
+    </style>
 </resources>

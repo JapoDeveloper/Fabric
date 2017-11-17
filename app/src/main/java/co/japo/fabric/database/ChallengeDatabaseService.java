@@ -1,5 +1,6 @@
 package co.japo.fabric.database;
 
+import com.firebase.ui.auth.User;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -13,6 +14,7 @@ import java.util.Map;
 
 import co.japo.fabric.interfaces.DataSetUpdatable;
 import co.japo.fabric.model.ChallengeModel;
+import co.japo.fabric.model.ChallengeResponseModel;
 
 /**
  * Created by japodeveloper on 11/14/17.
@@ -21,6 +23,9 @@ import co.japo.fabric.model.ChallengeModel;
 public class ChallengeDatabaseService {
 
     private static ChallengeDatabaseService instance;
+
+    private UserDatabaseService mUserDatabaseService;
+
     private DataSetUpdatable mDataSetUpdatable;
     private DatabaseReference mChallengesReference;
     private DatabaseReference mChallengesTopicsReference;
@@ -29,6 +34,7 @@ public class ChallengeDatabaseService {
     public Map<String,ChallengeModel> mChallenges;
 
     private ChallengeDatabaseService(){
+        mUserDatabaseService = UserDatabaseService.getInstance();
         mChallengesReference = FirebaseDatabase.getInstance().getReference("challenges");
         mChallengesTopicsReference = FirebaseDatabase.getInstance().getReference("challenges_topics");
         mChallengesResponsesReference = FirebaseDatabase.getInstance().getReference("challenges_responses");
@@ -91,6 +97,12 @@ public class ChallengeDatabaseService {
         for(String topic: topics){
             chaTopicRef.child(topic).setValue(true);
         }
+    }
+
+    public void saveUserChallengeResponse(String challengeKey, String userKey, ChallengeResponseModel response){
+        mChallengesResponsesReference.child(challengeKey)
+                .child(userKey).setValue(response);
+        mUserDatabaseService.addPointsToUser(userKey,response.earnedPoints);
     }
 
     public ChallengeModel getChallenge(String key){

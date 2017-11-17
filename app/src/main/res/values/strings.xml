@@ -23,10 +23,10 @@
     <string name="close">Close</string>
     <string name="multiple_choice">Multiple Choice</string>
     <string name="single_choice">Single choice</string>
-    <string name="show_image">Show image</string>
-    <string name="show_text">Show text</string>
-    <string name="challenge_description_hint">Enter challenge description</string>
-    <string name="challenge_solution_explanation_hint">Enter a explanation of the solution</string>
+    <string name="show_image">Image</string>
+    <string name="show_text">Text</string>
+    <string name="challenge_description_hint">Challenge description</string>
+    <string name="challenge_solution_explanation_hint">Explanation of the solution</string>
     <string name="challenge_option_hint">Enter an answer</string>
     <string name="type">Type</string>
     <string name="presentation_type">Present</string>
@@ -34,4 +34,19 @@
     <string name="camera">Camera</string>
     <string name="gallery">Gallery</string>
     <string name="addOption">Add answer</string>
+    <string name="image_resource">Image resource</string>
+    <string name="description">Description</string>
+    <string name="answers">Answers</string>
+    <string name="answer_text">Answer text</string>
+    <string name="correct_answer">Correct answer</string>
+    <string name="solution_explanation">Solution explanation</string>
+    <string name="create_challenge_success">Challenge successfully added!</string>
+    <string name="alert">Alert!</string>
+    <string name="max_options_achieve">Maximum number of options reached</string>
+    <string name="submit">Send</string>
+    <string name="msg_request_answer">Please select an answer</string>
+    <string name="congrats_title">ヽ(•‿•)ノ Congratulations!</string>
+    <string name="apologize_title">(⌣́_⌣̀)  Sorry!</string>
+    <string name="congrats_body">You answered correctly, you won %d points</string>
+    <string name="apologize_body">Do not answer correctly, study and luck for the next one.</string>
 </resources>

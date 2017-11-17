@@ -10,7 +10,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -30,15 +34,29 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import java.util.Iterator;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.storage.UploadTask;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import co.japo.fabric.Constants;
 import co.japo.fabric.R;
+import co.japo.fabric.database.ChallengeDatabaseService;
 import co.japo.fabric.database.LevelDatabaseService;
 import co.japo.fabric.database.TopicDatabaseService;
+import co.japo.fabric.database.UserDatabaseService;
 import co.japo.fabric.interfaces.DataSetUpdatable;
+import co.japo.fabric.model.ChallengeModel;
+import co.japo.fabric.storage.CloudStorageService;
+import co.japo.fabric.storage.InternalStorageUtil;
+import co.japo.fabric.ui.util.ViewRefactor;
+
+import static android.support.v4.app.FragmentManager.POP_BACK_STACK_INCLUSIVE;
 
 
 /**
@@ -48,17 +66,32 @@ public class CreateChallengeFragment extends Fragment implements DataSetUpdatabl
 
     private LevelDatabaseService mLevelDatabaseService;
     private TopicDatabaseService mTopicsDatabaseService;
+    private ChallengeDatabaseService mChallengeDatabaseService;
+    private UserDatabaseService mUserDatabaseService;
 
+    private CloudStorageService mCloudStorageService;
     private ArrayAdapter<String> mLevelAdapter;
 
+    private View mFragment;
+
+    private Spinner mLevel;
     private ImageView mPhoto;
+    private EditText mPoints;
+    private EditText mDescription;
+    private ToggleButton mChoiceType;
+    private ToggleButton mPresentationType;
+    private EditText mSolutionExplanation;
+
     private FrameLayout mChallengeOptionsFrame;
     private TableLayout mOptionsItemsLayout;
-    private View mFragment;
-    private ToggleButton mChoiceType;
+
+    private Uri mImageResource;
 
     private String[] mTopicsAvailable;
     private boolean[] mTopicsUserSelection;
+    private List<String> mTopicsForNewChallenge;
+
+    private ChallengeModel mChallengeData;
 
     public CreateChallengeFragment() {
         // Required empty public constructor
@@ -67,20 +100,30 @@ public class CreateChallengeFragment extends Fragment implements DataSetUpdatabl
 
         mTopicsDatabaseService = TopicDatabaseService.getInstance();
         mTopicsDatabaseService.setUpdateDataSetDelegate(this);
+
+        mChallengeDatabaseService = ChallengeDatabaseService.getInstance();
+        mChallengeDatabaseService.setUpdateDataSetDelegate(this);
+
+        mUserDatabaseService = UserDatabaseService.getInstance();
+
+        mCloudStorageService = CloudStorageService.getInstance();
     }
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        setHasOptionsMenu(true);
         mFragment = inflater.inflate(R.layout.fragment_create_challenge, container, false);
 
-        Spinner level = mFragment.findViewById(R.id.challengeLevelInput);
+        mLevel = mFragment.findViewById(R.id.challengeLevelInput);
 
         mLevelAdapter = new ArrayAdapter<>(mFragment.getContext(),android.R.layout.simple_spinner_item,mLevelDatabaseService.mLevelsAsList);
         mLevelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        level.setAdapter(mLevelAdapter);
-        level.setSelection(0);
+        mLevel.setAdapter(mLevelAdapter);
+        mLevel.setSelection(0);
+
+        mPoints = mFragment.findViewById(R.id.challengePointsInput);
 
         initTopics();
 
@@ -105,12 +148,14 @@ public class CreateChallengeFragment extends Fragment implements DataSetUpdatabl
             }
         });
 
-        final EditText description = mFragment.findViewById(R.id.challengeDescriptionInput);
+        mDescription = mFragment.findViewById(R.id.challengeDescriptionInput);
+        mSolutionExplanation = mFragment.findViewById(R.id.challengeSolutionExplanationInput);
+
         final Button photoPickerCamera = mFragment.findViewById(R.id.challengePickPhotoCamera);
         final Button photoPickerGallery = mFragment.findViewById(R.id.challengePickPhotoGallery);
         mPhoto = mFragment.findViewById(R.id.challengePhotoPreview);
 
-        description.setVisibility(View.VISIBLE);
+        mDescription.setVisibility(View.VISIBLE);
         photoPickerCamera.setVisibility(View.GONE);
         photoPickerGallery.setVisibility(View.GONE);
         mPhoto.setVisibility(View.GONE);
@@ -123,20 +168,20 @@ public class CreateChallengeFragment extends Fragment implements DataSetUpdatabl
             }
         });
 
-        ToggleButton presentationType = mFragment.findViewById(R.id.challengePresentationTypeInput);
-        presentationType.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        mPresentationType = mFragment.findViewById(R.id.challengePresentationTypeInput);
+        mPresentationType.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if(b){//toggle button on > image option
                     photoPickerCamera.setVisibility(View.VISIBLE);
                     photoPickerGallery.setVisibility(View.VISIBLE);
                     mPhoto.setVisibility(View.GONE);
-                    description.setVisibility(View.GONE);
+                    mDescription.setVisibility(View.GONE);
                 }else{//toggle button off > text option
                     photoPickerCamera.setVisibility(View.GONE);
                     photoPickerGallery.setVisibility(View.GONE);
                     mPhoto.setVisibility(View.GONE);
-                    description.setVisibility(View.VISIBLE);
+                    mDescription.setVisibility(View.VISIBLE);
                 }
             }
         });
@@ -163,6 +208,62 @@ public class CreateChallengeFragment extends Fragment implements DataSetUpdatabl
         return mFragment;
     }
 
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.create_challenge_menu,menu);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()){
+            case R.id.saveChallenge:
+                if(validateFormBeforeSubmit()){
+                    if(mChallengeData.presentation.equals("image")){
+                        UploadTask uploadTask = null;
+                        try {
+                             uploadTask = mCloudStorageService.uploadChallengeImage(mImageResource);
+                             uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                 @Override
+                                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                    mChallengeData.sourceUrl = taskSnapshot.getDownloadUrl().toString();
+                                     submitForm();
+                                 }
+                             });
+                        }catch(IOException ex){
+
+                        }
+                    }else{
+                        submitForm();
+                    }
+
+                    getActivity().getSupportFragmentManager().popBackStack("ChallengesFragment",POP_BACK_STACK_INCLUSIVE);
+                }
+                break;
+        }
+        return true;
+    }
+
+    @Override
+    public void updateDataSet() {
+        mLevelAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == Constants.RC_IMAGE_CAPTURE_FROM_CAMERA && resultCode == Activity.RESULT_OK) {
+            Bundle extras = data.getExtras();
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            File imageFile = InternalStorageUtil.saveImage(imageBitmap,true, mFragment.getContext());
+            mImageResource = Uri.parse(imageFile.getAbsolutePath());
+            displayPhotoResolve(mImageResource);
+        }else if(requestCode == Constants.RC_IMAGE_CAPTURE_FROM_GALLERY && resultCode == Activity.RESULT_OK) {
+            mImageResource = data.getData();
+            displayPhotoResolve(mImageResource);
+        }
+    }
+
     private void initTopics(){
         mTopicsUserSelection = new boolean[mTopicsDatabaseService.mTopics.size()];
         mTopicsAvailable = new String[mTopicsDatabaseService.mTopics.size()];
@@ -180,7 +281,13 @@ public class CreateChallengeFragment extends Fragment implements DataSetUpdatabl
         addOption.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                renderNewChallengeOption();
+                if(mOptionsItemsLayout.getChildCount() <= Constants.MAX_CHALLENGE_ANSWER_OPTONS) {
+                    renderNewChallengeOption();
+                }else{
+                    Toast.makeText(mFragment.getContext(),
+                            R.string.max_options_achieve,
+                            Toast.LENGTH_SHORT).show();
+                }
             }
         });
         LinearLayout linearLayout = new LinearLayout(mChallengeOptionsFrame.getContext());
@@ -195,7 +302,7 @@ public class CreateChallengeFragment extends Fragment implements DataSetUpdatabl
 
     private void renderNewChallengeOption(){
         TableRow option = new TableRow(mOptionsItemsLayout.getContext());
-        option.setLayoutParams(new TableLayout.LayoutParams(TableLayout.LayoutParams.MATCH_PARENT, TableLayout.LayoutParams.MATCH_PARENT));
+        option.setLayoutParams(new TableLayout.LayoutParams(TableLayout.LayoutParams.MATCH_PARENT, TableLayout.LayoutParams.WRAP_CONTENT));
 
         View selectableOption;
         if(mChoiceType.isChecked()) {
@@ -204,7 +311,7 @@ public class CreateChallengeFragment extends Fragment implements DataSetUpdatabl
             selectableOption = generateRadioButton();
         }
         TextView optionKey = new TextView(option.getContext());
-        optionKey.setText(mOptionsItemsLayout.getChildCount()+1+"");
+        optionKey.setText(Constants.ALPHABET[mOptionsItemsLayout.getChildCount()]);
         EditText optionValue = new EditText(option.getContext());
         optionValue.setHint(mFragment.getResources().getString(R.string.challenge_option_hint));
 
@@ -247,27 +354,122 @@ public class CreateChallengeFragment extends Fragment implements DataSetUpdatabl
         return rb;
     }
 
-    @Override
-    public void updateDataSet() {
-        mLevelAdapter.notifyDataSetChanged();
-    }
+    private boolean validateFormBeforeSubmit(){
+        StringBuilder validationMessage = new StringBuilder("The following fields are required: \n");
+        boolean valid = true;
+        mChallengeData = new ChallengeModel();
+        mChallengeData.creator = mUserDatabaseService.getLoggedInUserId();
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == Constants.RC_IMAGE_CAPTURE_FROM_CAMERA && resultCode == Activity.RESULT_OK) {
-            Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
-            displayPhotoResolve(imageBitmap);
-        }else if(requestCode == Constants.RC_IMAGE_CAPTURE_FROM_GALLERY && resultCode == Activity.RESULT_OK) {
-            Uri imageLocation = data.getData();
-            displayPhotoResolve(imageLocation);
+        mChallengeData.level = mLevel.getSelectedItem().toString();
+
+        mTopicsForNewChallenge = new ArrayList<>();
+        for(int i = 0; i < mTopicsUserSelection.length; i++){
+            if(mTopicsUserSelection[i]){
+                mTopicsForNewChallenge.add(mTopicsAvailable[i]);
+            }
         }
+        if(mTopicsForNewChallenge.isEmpty()){
+            validationMessage.append("\t").append(mFragment.getResources().getString(R.string.topics))
+                    .append("\n");
+            valid = false;
+        }
+
+        String points = mPoints.getText().toString();
+        if(!points.equals("")) {
+            mChallengeData.points = Integer.parseInt(points);
+        }else{
+            validationMessage.append("\t").append(mFragment.getResources().getString(R.string.points))
+                    .append("\n");
+            valid = false;
+        }
+
+        mChallengeData.multipleChoice = mChoiceType.isChecked();
+
+        mChallengeData.presentation = mPresentationType.isChecked() ? "image" : "text";
+        if(mPresentationType.isChecked()){
+            if(mImageResource == null){
+                validationMessage.append("\t").append(mFragment.getResources().getString(R.string.image_resource))
+                        .append("\n");
+                valid = false;
+            }
+        }else{
+            String description = mDescription.getText().toString();
+            if(!description.equals("")) {
+                mChallengeData.description = description;
+            }else{
+                validationMessage.append("\t").append(mFragment.getResources().getString(R.string.description))
+                        .append("\n");
+                valid = false;
+            }
+        }
+
+        int countAnswers = mOptionsItemsLayout.getChildCount();
+        if(countAnswers > 0){
+            String indexesCorrectAnswer = "";
+            Map<String,String> answers = new HashMap<>();
+            boolean correctAnswerSelected = false;
+            boolean optionTextValid = true;
+            for(int i = 0; i < countAnswers; i++){
+                TableRow row = (TableRow) mOptionsItemsLayout.getChildAt(i);
+                View selectionView = row.getChildAt(0);
+                if(selectionView instanceof CheckBox){
+                    if(((CheckBox) selectionView).isChecked()){
+                        indexesCorrectAnswer += ((TextView) row.getChildAt(1)).getText().toString()+",";
+                        correctAnswerSelected = true;
+                    }
+                }else if(selectionView instanceof RadioButton){
+                    if(((RadioButton) selectionView).isChecked()){
+                        indexesCorrectAnswer += ((TextView) row.getChildAt(1)).getText().toString()+",";
+                        correctAnswerSelected = true;
+                    }
+                }
+                String optionText = ((EditText) row.getChildAt(2)).getText().toString();
+                if(optionText.equals("")){
+                    optionTextValid = false;
+                }else {
+                    answers.put(
+                            ((TextView) row.getChildAt(1)).getText().toString(),
+                            optionText
+                    );
+                }
+            }
+            if(!optionTextValid){
+                validationMessage.append("\t").append(mFragment.getResources().getString(R.string.answer_text))
+                        .append("\n");
+                valid = false;
+            }else if(!correctAnswerSelected){
+                validationMessage.append("\t").append(mFragment.getResources().getString(R.string.correct_answer))
+                        .append("\n");
+                valid = false;
+            }else {
+                mChallengeData.options = answers;
+                mChallengeData.correctAnswer = indexesCorrectAnswer;
+            }
+        }else{
+            validationMessage.append("\t").append(mFragment.getResources().getString(R.string.answers))
+                    .append("\n");
+            valid = false;
+        }
+
+        String solution = mSolutionExplanation.getText().toString();
+        if(!solution.equals("")) {
+            mChallengeData.solutionExplanation = solution;
+        }else{
+            validationMessage.append("\t").append(mFragment.getResources().getString(R.string.solution_explanation))
+                    .append("\n");
+            valid = false;
+        }
+
+        if(!valid){
+            ViewRefactor.displayTextPopup(mFragment.getResources().getString(R.string.alert),
+                    validationMessage.append("\t").toString(),mFragment.getContext());
+        }
+        return valid;
     }
 
-    private void displayPhotoResolve(Bitmap bitmap){
-        mPhoto.setVisibility(View.VISIBLE);
-        mPhoto.setImageBitmap(bitmap);
+    private void submitForm(){
+        mChallengeDatabaseService.addNewChallenge(mChallengeData,mTopicsForNewChallenge);
+        Toast.makeText(mFragment.getContext(), R.string.create_challenge_success,Toast.LENGTH_LONG).show();
     }
 
     private void displayPhotoResolve(Uri uri){

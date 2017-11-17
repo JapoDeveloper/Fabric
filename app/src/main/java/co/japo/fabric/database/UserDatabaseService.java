@@ -8,6 +8,8 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.MutableData;
+import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
@@ -49,14 +51,43 @@ public class UserDatabaseService {
         instance = null;
     }
 
-    public UserModel registerUser(String uid, String name, String email, String photoUrl, String phoneNuumber){
-        UserModel user = new UserModel(name,email, photoUrl, phoneNuumber);
+    public UserModel registerUser(String uid, String name, String email, String photoUrl, String phoneNumber){
+        UserModel user = new UserModel(name,email, photoUrl, phoneNumber);
         mUsersReference.child(uid).setValue(user);
         return user;
     }
 
     public void updateUser(String uid, UserModel user){
         //TODO: define user fields to be updated
+    }
+
+    public void addPointsToUser(String userKey, final int points){
+        mUsersReference.child(userKey).child("earnedPoints").runTransaction(new Transaction.Handler() {
+            @Override
+            public Transaction.Result doTransaction(MutableData mutableData) {
+                int earnedPoints = mutableData.getValue(Integer.class);
+                earnedPoints += points;
+
+                mutableData.setValue(earnedPoints);
+                return Transaction.success(mutableData);
+            }
+
+            @Override
+            public void onComplete(DatabaseError databaseError, boolean b, DataSnapshot dataSnapshot) {
+
+            }
+        });
+    }
+
+    public void changeUserProfileImage(String userKey, String imageLocation){
+        mUsersReference.child(userKey).child("photoUrl").setValue(imageLocation);
+    }
+
+    public String getLoggedInUserId(){
+        if(FirebaseAuth.getInstance().getCurrentUser() != null) {
+            return FirebaseAuth.getInstance().getCurrentUser().getUid();
+        }
+        return null;
     }
 
     public UserModel getLoggedInUser(){

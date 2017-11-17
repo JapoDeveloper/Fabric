@@ -20,8 +20,9 @@ public class ChallengeModel {
     public String solutionExplanation;
     public int points;
     public String level;
+    public String creator;
 
-    public TreeMap<String,String> getOptionsAsTreeMap(){
+    public TreeMap<String,String> getOptions(){
         return new TreeMap<String,String>(options);
     }
 

@@ -46,7 +46,6 @@ public class ViewRefactor {
             }
             ((TextView) navBarHeader.findViewById(R.id.userName)).setText(userInfo.name);
             ((TextView) navBarHeader.findViewById(R.id.userEmailAddress)).setText(userInfo.email);
-            ((TextView) navBarHeader.findViewById(R.id.userLevel)).setText(userInfo.level + "\n" + navigationView.getContext().getResources().getString(R.string.level));
             ((TextView) navBarHeader.findViewById(R.id.userPoints)).setText(userInfo.earnedPoints + "\n" + navigationView.getContext().getResources().getString(R.string.points));
             ((TextView) navBarHeader.findViewById(R.id.userChallengesCount)).setText(userInfo.challengesCompleted + "\n" + navigationView.getContext().getResources().getString(R.string.challenges));
         }else{
@@ -57,12 +56,7 @@ public class ViewRefactor {
     public static void displayTextPopup(String title, String message, Context context){
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(title);
-
-        View view = LayoutInflater.from(context)
-                .inflate(R.layout.text_popup,null);
-        ((TextView) view.findViewById(R.id.textPopup)).setText(message);
-
-        builder.setView(view);
+        builder.setMessage(message);
         builder.create().show();
     }
 
