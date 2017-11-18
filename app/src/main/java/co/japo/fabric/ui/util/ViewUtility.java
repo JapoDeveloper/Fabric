@@ -1,7 +1,11 @@
 package co.japo.fabric.ui.util;
 
+import android.app.Dialog;
 import android.content.Context;
+import android.graphics.LightingColorFilter;
 import android.support.v7.app.AlertDialog;
+
+import co.japo.fabric.R;
 
 
 /**
@@ -16,7 +20,10 @@ public class ViewUtility {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(title);
         builder.setMessage(message);
-        builder.create().show();
+        Dialog myDialog = builder.create();
+        myDialog.getWindow().getDecorView().getBackground().setColorFilter(new LightingColorFilter(0xFF000000,
+                context.getResources().getColor(R.color.colorAccent)));
+        myDialog.show();
     }
 
 }

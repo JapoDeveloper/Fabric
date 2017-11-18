@@ -58,6 +58,7 @@ public class LevelDatabaseService {
                 mLevelValueEventListener =  new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
+                        mLevels.clear();
                         for(DataSnapshot levelDataSnapshot : dataSnapshot.getChildren()){
                             mLevels.put(levelDataSnapshot.getKey(),levelDataSnapshot.getValue(String.class));
                         }

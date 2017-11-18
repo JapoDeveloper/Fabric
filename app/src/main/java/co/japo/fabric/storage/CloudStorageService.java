@@ -38,6 +38,6 @@ public class CloudStorageService {
 
     public UploadTask uploadChallengeImage(Uri imageLocation) throws IOException{
         InputStream stream = new FileInputStream(new File(imageLocation.getPath()));
-        return imagesChallenges.putStream(stream);
+        return imagesChallenges.child(imageLocation.getLastPathSegment()).putStream(stream);
     }
 }

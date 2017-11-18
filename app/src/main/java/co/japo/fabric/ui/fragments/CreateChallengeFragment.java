@@ -263,13 +263,12 @@ public class CreateChallengeFragment extends Fragment implements DataSetUpdatabl
                                  }
                              });
                         }catch(IOException ex){
-
+                            ex.printStackTrace();
                         }
                     }else{
                         submitForm();
                     }
 
-                    getActivity().getSupportFragmentManager().popBackStack("ChallengesFragment",POP_BACK_STACK_INCLUSIVE);
                 }
                 break;
         }
@@ -292,7 +291,16 @@ public class CreateChallengeFragment extends Fragment implements DataSetUpdatabl
             displayPhotoResolve(mImageResource);
         }else if(requestCode == Constants.RC_IMAGE_CAPTURE_FROM_GALLERY && resultCode == Activity.RESULT_OK) {
             mImageResource = data.getData();
-            displayPhotoResolve(mImageResource);
+            try {
+                Bitmap imageBitmap = MediaStore.Images.Media
+                        .getBitmap(getActivity().getContentResolver(), mImageResource);
+                File imageFile = InternalStorageUtil.saveImage(imageBitmap,true, mFragment.getContext());
+                mImageResource = Uri.parse(imageFile.getAbsolutePath());
+                displayPhotoResolve(mImageResource);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
         }
     }
 
@@ -505,6 +513,7 @@ public class CreateChallengeFragment extends Fragment implements DataSetUpdatabl
     private void submitForm(){
         mChallengeDatabaseService.addNewChallenge(mChallengeData,mTopicsForNewChallenge);
         Toast.makeText(mFragment.getContext(), R.string.create_challenge_success,Toast.LENGTH_LONG).show();
+        getActivity().getSupportFragmentManager().popBackStack("ChallengesFragment",POP_BACK_STACK_INCLUSIVE);
     }
 
     private void displayPhotoResolve(Uri uri){

@@ -43,9 +43,7 @@ public class TopicsFragment extends Fragment implements DataSetUpdatable {
         mTopicDatabaseService = TopicDatabaseService.getInstance();
         mTopicDatabaseService.setUpdateDataSetDelegate(this);
 
-        mUserSubscriptionDatabaseService = UserSubscriptionsDatabaseService.getInstance(
-                FirebaseAuth.getInstance().getCurrentUser().getUid()
-        );
+        mUserSubscriptionDatabaseService = UserSubscriptionsDatabaseService.getInstance();
     }
 
 

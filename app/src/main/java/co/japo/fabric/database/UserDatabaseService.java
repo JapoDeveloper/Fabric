@@ -14,8 +14,10 @@ import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.TreeMap;
 
 import co.japo.fabric.interfaces.UserDataUpdatable;
 import co.japo.fabric.model.UserModel;
@@ -144,10 +146,9 @@ public class UserDatabaseService {
 
     public UserModel getLoggedInUser(){
         if(FirebaseAuth.getInstance().getCurrentUser() != null) {
-            Log.d("getLoggedInUser", FirebaseAuth.getInstance().getCurrentUser().getUid());
-            return getUser(FirebaseAuth.getInstance().getCurrentUser().getUid());
+            UserModel user = getUser(FirebaseAuth.getInstance().getCurrentUser().getUid());
+            return user;
         }
-        Log.d("getLoggedInUser","user null");
         return null;
     }
 
@@ -160,6 +161,7 @@ public class UserDatabaseService {
             mUsersValueEventListener = new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
+                    mUsers.clear();
                     for(DataSnapshot userDataSnapshot : dataSnapshot.getChildren()){
                         mUsers.put(userDataSnapshot.getKey(),userDataSnapshot.getValue(UserModel.class));
                     }

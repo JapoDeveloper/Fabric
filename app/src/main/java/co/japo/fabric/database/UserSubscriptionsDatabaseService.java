@@ -2,6 +2,7 @@ package co.japo.fabric.database;
 
 import android.util.Log;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -24,17 +25,17 @@ public class UserSubscriptionsDatabaseService {
 
     public Set<String> mTopics;
 
-    private UserSubscriptionsDatabaseService(String userKey){
+    private UserSubscriptionsDatabaseService(){
         mUsersSubscriptionReference = FirebaseDatabase.getInstance()
                 .getReference()
                 .child("user_subscriptions")
-            .child(userKey);
+            .child(FirebaseAuth.getInstance().getCurrentUser().getUid());
         init();
     }
 
-    public static UserSubscriptionsDatabaseService getInstance(String userKey){
+    public static UserSubscriptionsDatabaseService getInstance(){
         if(mInstance == null){
-            mInstance = new UserSubscriptionsDatabaseService(userKey);
+            mInstance = new UserSubscriptionsDatabaseService();
         }
         return mInstance;
     }
@@ -48,11 +49,10 @@ public class UserSubscriptionsDatabaseService {
         ValueEventListener mTopicsValueEventListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                mTopics.clear();
                 for(DataSnapshot child : dataSnapshot.getChildren()){
                     if(child.getValue(Boolean.class)) {
                         mTopics.add(child.getKey());
-                    }else{
-                        mTopics.remove(child.getKey());
                     }
                 }
             }

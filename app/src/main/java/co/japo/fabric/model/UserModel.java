@@ -38,6 +38,16 @@ public class UserModel {
         this.level = "";
     }
 
+    public UserModel(String name, String email, String photoUrl, String phoneNumber, float earnedPoints, int challengesCompleted, String level) {
+        this.name = name;
+        this.email = email;
+        this.photoUrl = photoUrl;
+        this.phoneNumber = phoneNumber;
+        this.earnedPoints = earnedPoints;
+        this.challengesCompleted = challengesCompleted;
+        this.level = level;
+    }
+
     @Override
     public String toString() {
         return "UserModel{" +

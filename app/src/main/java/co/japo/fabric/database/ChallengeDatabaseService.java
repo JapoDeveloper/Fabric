@@ -1,5 +1,7 @@
 package co.japo.fabric.database;
 
+import android.util.Log;
+
 import com.firebase.ui.auth.User;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -15,6 +17,7 @@ import java.util.Map;
 import co.japo.fabric.interfaces.DataSetUpdatable;
 import co.japo.fabric.model.ChallengeModel;
 import co.japo.fabric.model.ChallengeResponseModel;
+import co.japo.fabric.model.UserModel;
 
 /**
  * Created by japodeveloper on 11/14/17.
@@ -60,15 +63,18 @@ public class ChallengeDatabaseService {
 
     private void initializeListeners(){
         if(mChallengesValueEventListener == null) {
+
             mChallengesValueEventListener = new ValueEventListener() {
 
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
+                    mChallenges.clear();
                     Iterator<DataSnapshot> challenges = dataSnapshot.getChildren().iterator();
                     while(challenges.hasNext()){
                         DataSnapshot challenge = challenges.next();
-                        mChallenges.put(challenge.getKey(),challenge.getValue(ChallengeModel.class));
-                    }
+                        ChallengeModel challengeModel = challenge.getValue(ChallengeModel.class);
+                            mChallenges.put(challenge.getKey(), challengeModel);
+                  }
                     if(mDataSetUpdatable != null){
                         mDataSetUpdatable.updateDataSet();
                     }
@@ -79,6 +85,7 @@ public class ChallengeDatabaseService {
 
                 }
             };
+
             mChallengesReference.addValueEventListener(mChallengesValueEventListener);
         }
     }
