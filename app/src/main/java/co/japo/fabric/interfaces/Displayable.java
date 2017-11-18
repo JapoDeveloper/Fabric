@@ -8,6 +8,6 @@ import android.os.Bundle;
 
 public interface Displayable {
 
-    void display(Class classType, String from, Bundle bundle);
+    void display(Class classType, String from, Bundle bundle, String title, Integer resourceId);
 
 }

@@ -1,9 +1,7 @@
 package co.japo.fabric.ui.activities;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.net.Uri;
-import android.provider.ContactsContract;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.GravityCompat;
@@ -12,33 +10,38 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.firebase.ui.auth.AuthUI;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.FirebaseDatabase;
 
 import co.japo.fabric.Constants;
 import co.japo.fabric.R;
 import co.japo.fabric.auth.FirebaseAuthenticationService;
 import co.japo.fabric.database.UserDatabaseService;
 import co.japo.fabric.interfaces.Displayable;
+import co.japo.fabric.interfaces.UserDataUpdatable;
+import co.japo.fabric.model.UserModel;
 import co.japo.fabric.ui.fragments.ChallengesFragment;
-import co.japo.fabric.ui.fragments.CreateChallengeFragment;
 import co.japo.fabric.ui.fragments.ProfileFragment;
 import co.japo.fabric.ui.fragments.TopicsFragment;
-import co.japo.fabric.ui.util.ViewRefactor;
 
 public class MainActivity extends AppCompatActivity
-    implements NavigationView.OnNavigationItemSelectedListener, Displayable{
+    implements NavigationView.OnNavigationItemSelectedListener, Displayable, UserDataUpdatable{
 
     private Toolbar mToolbar;
     private NavigationView mNavigationView;
+    private CollapsingToolbarLayout mCollapsingToolbar;
 
     private FirebaseAuth mFirebaseAuth;
-    private FirebaseDatabase mFirebaseDatabase;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
+
+    private UserDatabaseService mUserDatabaseService;
 
     private Fragment mCurrentFragment;
 
@@ -47,10 +50,17 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mToolbar  = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(mToolbar);
+        mUserDatabaseService = UserDatabaseService.getInstance();
+        mUserDatabaseService.setUserDataUpdatable(this);
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mToolbar  = findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        mCollapsingToolbar = findViewById(R.id.collapsing_toolbar);
+        mCollapsingToolbar.setTitle(getString(R.string.challenges));
+
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
@@ -60,33 +70,22 @@ public class MainActivity extends AppCompatActivity
         mNavigationView.setNavigationItemSelectedListener(this);
 
         //Initialize Firebase components
-        mFirebaseDatabase = FirebaseDatabase.getInstance();
         mFirebaseAuth = FirebaseAuth.getInstance();
 
         //Initialize Firebase listeners
         mAuthStateListener = FirebaseAuthenticationService.getInstance().getFirebaseAuthStateListener(this);
 
-        ChallengesFragment fragment = new ChallengesFragment();
-        fragment.setDisplayable(this);
+        openChallengesFragment();
 
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.contentFrame, fragment,"ChallengesFragment")
-                .addToBackStack(null)
-                .commit();
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
         if(requestCode == Constants.RC_SIGN_IN){
             if(resultCode == RESULT_CANCELED){
                 finish();
-            }else if(resultCode == RESULT_OK){
-                ViewRefactor.displayUserInfo(
-                        UserDatabaseService.getInstance().getLoggedInUser(),this
-                );
-            }
+            }else if(resultCode == RESULT_OK){}
         }
     }
 
@@ -102,10 +101,9 @@ public class MainActivity extends AppCompatActivity
         mFirebaseAuth.addAuthStateListener(mAuthStateListener);
     }
 
-
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -120,33 +118,14 @@ public class MainActivity extends AppCompatActivity
             case R.id.nav_sign_out:
                 AuthUI.getInstance().signOut(this);
                 break;
-            case R.id.nav_home:
-                break;
             case R.id.nav_account:
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.contentFrame,new ProfileFragment(),"ProfileFragment")
-                        .commit();
-
-                mToolbar.setTitle(R.string.account);
+                openProfileFragment();
                 break;
             case R.id.nav_topics:
-                getSupportFragmentManager().beginTransaction()
-                .replace(R.id.contentFrame, new TopicsFragment(),"TopicsFragment")
-                .addToBackStack(null)
-                .commit();
-
-                mToolbar.setTitle(R.string.topics);
+                openTopicsFragment();
                 break;
             case R.id.nav_challenges:
-                ChallengesFragment fragment = new ChallengesFragment();
-                fragment.setDisplayable(this);
-
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.contentFrame,fragment,"ChallengesFragment")
-                        .addToBackStack(null)
-                        .commit();
-
-                mToolbar.setTitle(R.string.challenges);
+                openChallengesFragment();
                 break;
         }
 
@@ -155,8 +134,52 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    private void openTopicsFragment() {
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.contentFrame, new TopicsFragment(),"TopicsFragment")
+                .addToBackStack(null)
+                .commit();
+
+        mCollapsingToolbar.setTitle(getString(R.string.topics));
+
+        final ImageView backToolbar = findViewById(R.id.back_toolbar);
+        Glide.with(this).load(R.drawable.topics_header)
+                .apply(RequestOptions.centerCropTransform())
+                .into(backToolbar);
+    }
+
+    private void openProfileFragment() {
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.contentFrame,new ProfileFragment(),"ProfileFragment")
+                .commit();
+
+        mCollapsingToolbar.setTitle(getString(R.string.account));
+
+        final ImageView backToolbar = findViewById(R.id.back_toolbar);
+        Glide.with(this).load(R.drawable.profile_header)
+                .apply(RequestOptions.centerCropTransform())
+                .into(backToolbar);
+    }
+
+    private void openChallengesFragment() {
+        ChallengesFragment fragment = new ChallengesFragment();
+        fragment.setDisplayable(this);
+
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.contentFrame,fragment,"ChallengesFragment")
+                .addToBackStack(null)
+                .commit();
+
+        mCollapsingToolbar.setTitle(getString(R.string.challenges));
+
+        final ImageView backToolbar = findViewById(R.id.back_toolbar);
+        Glide.with(this).load(R.drawable.challenges_header)
+                .apply(RequestOptions.centerCropTransform())
+                .into(backToolbar);
+    }
+
     @Override
-    public void display(Class classType, String from, Bundle bundle) {
+    public void display(Class classType, String from, Bundle bundle, String title, Integer resourceId) {
 
         try {
             Object instance = classType.newInstance();
@@ -169,6 +192,19 @@ public class MainActivity extends AppCompatActivity
                         .replace(R.id.contentFrame,mCurrentFragment)
                         .addToBackStack(from)
                         .commit();
+
+                mCollapsingToolbar.setTitle(title);
+
+                int drawable = R.drawable.default_header;
+                if(resourceId != null){
+                    drawable = resourceId.intValue();
+                }
+
+                final ImageView backToolbar = findViewById(R.id.back_toolbar);
+                Glide.with(this).load(drawable)
+                        .apply(RequestOptions.centerCropTransform())
+                        .into(backToolbar);
+
             }
         } catch (InstantiationException e) {
             e.printStackTrace();
@@ -176,4 +212,33 @@ public class MainActivity extends AppCompatActivity
             e.printStackTrace();
         }
     }
+
+    @Override
+    public void displayUserChanges() {
+        updateUserInfoInNav();
+    }
+
+    public void updateUserInfoInNav(){
+        UserModel currentUser = mUserDatabaseService.getLoggedInUser();
+        if(currentUser != null){
+            View navBarHeader = getLayoutInflater().inflate(R.layout.nav_header_main, null);
+            if (currentUser.photoUrl != null
+                    && currentUser.photoUrl != "") {
+                ImageView userPhoto = navBarHeader.findViewById(R.id.userPhoto);
+                Glide.with(mNavigationView.getContext())
+                        .load(currentUser.photoUrl)
+                        .apply(RequestOptions.circleCropTransform())
+                        .into(userPhoto);
+            }
+            ((TextView) navBarHeader.findViewById(R.id.userName)).setText(currentUser.name);
+            ((TextView) navBarHeader.findViewById(R.id.userEmailAddress)).setText(currentUser.email);
+            ((TextView) navBarHeader.findViewById(R.id.userPoints)).setText(currentUser.earnedPoints + "\n" + getString(R.string.points));
+            ((TextView) navBarHeader.findViewById(R.id.userChallengesCount)).setText(currentUser.challengesCompleted + "\n" + getString(R.string.challenges));
+
+            mNavigationView.removeHeaderView(mNavigationView.getHeaderView(0));
+            mNavigationView.addHeaderView(navBarHeader);
+        }
+    }
+
+
 }

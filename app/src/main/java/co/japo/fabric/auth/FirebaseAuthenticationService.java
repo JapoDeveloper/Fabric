@@ -14,7 +14,6 @@ import co.japo.fabric.Constants;
 import co.japo.fabric.R;
 import co.japo.fabric.database.UserDatabaseService;
 import co.japo.fabric.model.UserModel;
-import co.japo.fabric.ui.util.ViewRefactor;
 
 /**
  * Created by japodeveloper on 11/12/17.
@@ -44,15 +43,14 @@ public class FirebaseAuthenticationService {
 
                     //user is signed in
                         if (userInfo == null) {
-                            userInfo =  userDatabaseService.registerUser(user.getUid(),
+                          userDatabaseService.registerUserIfNotExists(user.getUid(),
                                     user.getDisplayName(), user.getEmail(),
                                     user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : null, user.getPhoneNumber());
                         }
                         Toast.makeText(from,
                                 from.getResources().getString(R.string.successful_login_message), Toast.LENGTH_LONG)
                                 .show();
-
-                    ViewRefactor.displayUserInfo(userInfo,from);
+                    userDatabaseService.attachCurrentUserEventListener();
                 }else{
                     //user is signed out
                     from.startActivityForResult(

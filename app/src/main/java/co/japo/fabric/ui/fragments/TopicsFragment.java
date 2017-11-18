@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
@@ -18,11 +19,14 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
+
 import java.util.List;
 import java.util.regex.Pattern;
 
 import co.japo.fabric.R;
 import co.japo.fabric.database.TopicDatabaseService;
+import co.japo.fabric.database.UserSubscriptionsDatabaseService;
 import co.japo.fabric.interfaces.DataSetUpdatable;
 
 /**
@@ -31,12 +35,17 @@ import co.japo.fabric.interfaces.DataSetUpdatable;
 public class TopicsFragment extends Fragment implements DataSetUpdatable {
 
     private TopicDatabaseService mTopicDatabaseService;
+    private UserSubscriptionsDatabaseService mUserSubscriptionDatabaseService;
     private TopicsAdapter mTopicsAdapter;
 
     public TopicsFragment() {
         // Required empty public constructor
         mTopicDatabaseService = TopicDatabaseService.getInstance();
         mTopicDatabaseService.setUpdateDataSetDelegate(this);
+
+        mUserSubscriptionDatabaseService = UserSubscriptionsDatabaseService.getInstance(
+                FirebaseAuth.getInstance().getCurrentUser().getUid()
+        );
     }
 
 
@@ -108,14 +117,41 @@ public class TopicsFragment extends Fragment implements DataSetUpdatable {
         public TopicViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             return new TopicViewHolder(
                     LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.single_line_item, null)
+                    .inflate(viewType, null)
             );
         }
 
         @Override
-        public void onBindViewHolder(TopicViewHolder holder, int position) {
-            String item = this.topics.get(position);
+        public int getItemViewType(int position) {
+            if(mUserSubscriptionDatabaseService.mTopics.contains(this.topics.get(position))){
+                return R.layout.single_line_item_active;
+            }
+            return R.layout.single_line_item;
+        }
+
+        @Override
+        public void onBindViewHolder(final TopicViewHolder holder, final int position) {
+            final String item = this.topics.get(position);
             holder.topicName.setText(item);
+            holder.item.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View view) {
+                    if(
+                            (holder.item.getTag().equals("itemActive") ?
+                    mUserSubscriptionDatabaseService.unSubscribeToTopic(item) :
+                            mUserSubscriptionDatabaseService.subscribeToTopic(item))
+                            ) {
+                        Toast.makeText(holder.item.getContext(),
+                                String.format(getString(R.string.notify_user_subscription_success),
+                                        (holder.item.getTag().equals("itemActive") ? "unsubscribe" : "subscribe"),
+                                        item + " " + getString(R.string.topic))
+                                ,
+                                Toast.LENGTH_SHORT).show();
+                        mTopicsAdapter.notifyDataSetChanged();
+                    }
+                    return false;
+                }
+            });
         }
 
         @Override
@@ -125,11 +161,13 @@ public class TopicsFragment extends Fragment implements DataSetUpdatable {
     }
 
     private class TopicViewHolder extends RecyclerView.ViewHolder{
+        public View item;
         public TextView topicName;
 
         public TopicViewHolder(View itemView) {
             super(itemView);
-            this.topicName = (TextView) itemView.findViewById(R.id.itemTitle);
+            this.item = itemView.findViewById(R.id.singleLineItem);
+            this.topicName = itemView.findViewById(R.id.itemTitle);
         }
     }
 }

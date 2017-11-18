@@ -9,8 +9,10 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
-import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -54,7 +56,7 @@ import co.japo.fabric.interfaces.DataSetUpdatable;
 import co.japo.fabric.model.ChallengeModel;
 import co.japo.fabric.storage.CloudStorageService;
 import co.japo.fabric.storage.InternalStorageUtil;
-import co.japo.fabric.ui.util.ViewRefactor;
+import co.japo.fabric.ui.util.ViewUtility;
 
 import static android.support.v4.app.FragmentManager.POP_BACK_STACK_INCLUSIVE;
 
@@ -82,7 +84,7 @@ public class CreateChallengeFragment extends Fragment implements DataSetUpdatabl
     private ToggleButton mPresentationType;
     private EditText mSolutionExplanation;
 
-    private FrameLayout mChallengeOptionsFrame;
+    private LinearLayout mChallengeOptionsFrame;
     private TableLayout mOptionsItemsLayout;
 
     private Uri mImageResource;
@@ -118,7 +120,8 @@ public class CreateChallengeFragment extends Fragment implements DataSetUpdatabl
 
         mLevel = mFragment.findViewById(R.id.challengeLevelInput);
 
-        mLevelAdapter = new ArrayAdapter<>(mFragment.getContext(),android.R.layout.simple_spinner_item,mLevelDatabaseService.mLevelsAsList);
+        mLevelAdapter = new ArrayAdapter<>(mFragment.getContext(),android.R.layout.simple_spinner_item,
+                new ArrayList<String>( mLevelDatabaseService.mLevels.values()));
         mLevelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mLevel.setAdapter(mLevelAdapter);
         mLevel.setSelection(0);
@@ -127,8 +130,8 @@ public class CreateChallengeFragment extends Fragment implements DataSetUpdatabl
 
         initTopics();
 
-        ImageButton topics = mFragment.findViewById(R.id.challengeTopicsPicker);
-        topics.setOnClickListener(new View.OnClickListener() {
+        FloatingActionButton topicsPicker = mFragment.findViewById(R.id.challengeTopicsPicker);
+        topicsPicker.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(mTopicsAvailable != null && mTopicsAvailable.length == 0){
@@ -148,16 +151,64 @@ public class CreateChallengeFragment extends Fragment implements DataSetUpdatabl
             }
         });
 
+        final FloatingActionButton photoPicker = mFragment.findViewById(R.id.challengePhotoPicker);
+        photoPicker.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(mFragment.getContext());
+
+                LinearLayout linearLayout = new LinearLayout(mFragment.getContext());
+                linearLayout.setLayoutParams(
+                        new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT)
+                );
+
+                Button camera = new Button(mFragment.getContext());
+                camera.setLayoutParams(
+                        new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT,1)
+                );
+                camera.setText(getString(R.string.camera));
+                camera.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent openCamera = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                        startActivityForResult(openCamera, Constants.RC_IMAGE_CAPTURE_FROM_CAMERA);
+                    }
+                });
+
+                Button gallery = new Button(mFragment.getContext());
+                gallery.setLayoutParams(
+                        new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT,1)
+                );
+                gallery.setText(getString(R.string.gallery));
+                gallery.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent openGallery = new Intent(Intent.ACTION_PICK);
+                        openGallery.setType("image/*");
+                        startActivityForResult(openGallery,Constants.RC_IMAGE_CAPTURE_FROM_GALLERY);
+                    }
+                });
+
+                linearLayout.addView(camera);
+                linearLayout.addView(gallery);
+
+                builder.setView(linearLayout);
+                builder.create().show();
+
+            }
+        });
+
         mDescription = mFragment.findViewById(R.id.challengeDescriptionInput);
+        final TextInputLayout mDescriptionLayout = mFragment.findViewById(R.id.challengeDescriptionInputLayout);
         mSolutionExplanation = mFragment.findViewById(R.id.challengeSolutionExplanationInput);
 
-        final Button photoPickerCamera = mFragment.findViewById(R.id.challengePickPhotoCamera);
-        final Button photoPickerGallery = mFragment.findViewById(R.id.challengePickPhotoGallery);
         mPhoto = mFragment.findViewById(R.id.challengePhotoPreview);
 
-        mDescription.setVisibility(View.VISIBLE);
-        photoPickerCamera.setVisibility(View.GONE);
-        photoPickerGallery.setVisibility(View.GONE);
+        mDescriptionLayout.setVisibility(View.VISIBLE);
+        photoPicker.setVisibility(View.GONE);
         mPhoto.setVisibility(View.GONE);
 
         mChoiceType = mFragment.findViewById(R.id.challengeChoiceInput);
@@ -173,37 +224,18 @@ public class CreateChallengeFragment extends Fragment implements DataSetUpdatabl
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if(b){//toggle button on > image option
-                    photoPickerCamera.setVisibility(View.VISIBLE);
-                    photoPickerGallery.setVisibility(View.VISIBLE);
-                    mPhoto.setVisibility(View.GONE);
-                    mDescription.setVisibility(View.GONE);
+                    photoPicker.setVisibility(View.VISIBLE);
+                    mPhoto.setVisibility(View.VISIBLE);
+                    mDescriptionLayout.setVisibility(View.GONE);
                 }else{//toggle button off > text option
-                    photoPickerCamera.setVisibility(View.GONE);
-                    photoPickerGallery.setVisibility(View.GONE);
+                    photoPicker.setVisibility(View.GONE);
                     mPhoto.setVisibility(View.GONE);
-                    mDescription.setVisibility(View.VISIBLE);
+                    mDescriptionLayout.setVisibility(View.VISIBLE);
                 }
             }
         });
 
         renderChallengeOptionsFrame();
-
-        photoPickerCamera.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent openCamera = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    startActivityForResult(openCamera, Constants.RC_IMAGE_CAPTURE_FROM_CAMERA);
-            }
-        });
-
-        photoPickerGallery.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent openGallery = new Intent(Intent.ACTION_PICK);
-                openGallery.setType("image/*");
-                startActivityForResult(openGallery,Constants.RC_IMAGE_CAPTURE_FROM_GALLERY);
-            }
-        });
 
         return mFragment;
     }
@@ -276,8 +308,11 @@ public class CreateChallengeFragment extends Fragment implements DataSetUpdatabl
     private void renderChallengeOptionsFrame() {
         mChallengeOptionsFrame = mFragment.findViewById(R.id.challengeOptionsContent);
         mOptionsItemsLayout = new TableLayout(mChallengeOptionsFrame.getContext());
-        Button addOption = new Button(mChallengeOptionsFrame.getContext());
-        addOption.setText(mFragment.getResources().getString(R.string.addOption));
+//        Button addOption = new Button(mChallengeOptionsFrame.getContext());
+//        addOption.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT
+//                ,FrameLayout.LayoutParams.WRAP_CONTENT));
+//        addOption.setText(mFragment.getResources().getString(R.string.addOption));
+        Button addOption = mFragment.findViewById(R.id.addOption);
         addOption.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -294,7 +329,7 @@ public class CreateChallengeFragment extends Fragment implements DataSetUpdatabl
         linearLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.WRAP_CONTENT));
         linearLayout.setOrientation(LinearLayout.VERTICAL);
 
-        linearLayout.addView(addOption);
+//        linearLayout.addView(addOption);
         linearLayout.addView(mOptionsItemsLayout);
 
         mChallengeOptionsFrame.addView(linearLayout);
@@ -461,7 +496,7 @@ public class CreateChallengeFragment extends Fragment implements DataSetUpdatabl
         }
 
         if(!valid){
-            ViewRefactor.displayTextPopup(mFragment.getResources().getString(R.string.alert),
+            ViewUtility.displayTextPopup(mFragment.getResources().getString(R.string.alert),
                     validationMessage.append("\t").toString(),mFragment.getContext());
         }
         return valid;

@@ -7,7 +7,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -19,9 +18,7 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.TreeMap;
 
 import co.japo.fabric.R;
@@ -29,7 +26,7 @@ import co.japo.fabric.database.ChallengeDatabaseService;
 import co.japo.fabric.database.UserDatabaseService;
 import co.japo.fabric.model.ChallengeModel;
 import co.japo.fabric.model.ChallengeResponseModel;
-import co.japo.fabric.ui.util.ViewRefactor;
+import co.japo.fabric.ui.util.ViewUtility;
 
 import static android.support.v4.app.FragmentManager.POP_BACK_STACK_INCLUSIVE;
 
@@ -151,7 +148,7 @@ public class TakeChallengeFragment extends Fragment {
             mChallengeDatabaseService.saveUserChallengeResponse(mChallengeKey,
                     mUserDatabaseService.getLoggedInUserId(),
                     response);
-            ViewRefactor.displayTextPopup(
+            ViewUtility.displayTextPopup(
                     response.isCorrect ? getString(R.string.congrats_title) : getString(R.string.apologize_title),
                     response.isCorrect ? String.format(getString(R.string.congrats_body),response.earnedPoints)
                             : getString(R.string.apologize_body),

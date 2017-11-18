@@ -1,10 +1,13 @@
 package co.japo.fabric.database;
 
+import android.util.Log;
+
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,6 +15,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import co.japo.fabric.interfaces.DataSetUpdatable;
 
@@ -24,9 +28,8 @@ public class LevelDatabaseService {
     private static LevelDatabaseService instance;
     private DataSetUpdatable mDataSetUpdatable;
     private DatabaseReference mLevelsReference;
-    private ChildEventListener mLevelsChilEventListener;
+    private ValueEventListener mLevelValueEventListener;
     public Map<String,String> mLevels;
-    public List<String> mLevelsAsList;
 
     private LevelDatabaseService(){
         mLevelsReference = FirebaseDatabase.getInstance().getReference().child("levels");
@@ -41,8 +44,7 @@ public class LevelDatabaseService {
     }
 
     private void init(){
-        mLevels =  new HashMap<>();
-        mLevelsAsList = new ArrayList<>();
+        mLevels =  new TreeMap<>();
         initializeListeners();
     }
 
@@ -52,43 +54,27 @@ public class LevelDatabaseService {
     }
 
     private void initializeListeners(){
-        if(mLevelsChilEventListener == null) {
-            mLevelsChilEventListener = new ChildEventListener() {
-                @Override
-                public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                    mLevels.put(dataSnapshot.getKey(),dataSnapshot.getValue(String.class));
-                    mLevelsAsList.add(dataSnapshot.getValue(String.class));
-                    if(mDataSetUpdatable != null) {
-                        mDataSetUpdatable.updateDataSet();
+            if(mLevelValueEventListener == null) {
+                mLevelValueEventListener =  new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        for(DataSnapshot levelDataSnapshot : dataSnapshot.getChildren()){
+                            mLevels.put(levelDataSnapshot.getKey(),levelDataSnapshot.getValue(String.class));
+                        }
                     }
-                }
 
-                @Override
-                public void onChildChanged(DataSnapshot dataSnapshot, String s) {}
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
 
-                @Override
-                public void onChildRemoved(DataSnapshot dataSnapshot) {
-                    String level = dataSnapshot.getKey();
-                    mLevels.remove(level);
-                    mLevels.remove(dataSnapshot.getValue(String.class));
-                    if(mDataSetUpdatable != null) {
-                        mDataSetUpdatable.updateDataSet();
                     }
-                }
-
-                @Override
-                public void onChildMoved(DataSnapshot dataSnapshot, String s) {}
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {}
-            };
-            mLevelsReference.addChildEventListener(mLevelsChilEventListener);
-        }
+                };
+                mLevelsReference.orderByKey().addValueEventListener(mLevelValueEventListener);
+            }
     }
 
     public void detachListeners(){
-        if(mLevelsChilEventListener != null) {
-            mLevelsReference.removeEventListener(mLevelsChilEventListener);
+        if(mLevelValueEventListener != null){
+            mLevelsReference.removeEventListener(mLevelValueEventListener);
         }
     }
 
@@ -98,5 +84,9 @@ public class LevelDatabaseService {
 
     public List<String> getLevelList(){
         return Arrays.asList(mLevels.values().toArray(new String[mLevels.values().size()]));
+    }
+
+    public String getLevel(String levelKey){
+        return this.mLevels.get(levelKey);
     }
 }

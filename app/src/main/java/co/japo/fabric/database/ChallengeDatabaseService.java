@@ -102,7 +102,7 @@ public class ChallengeDatabaseService {
     public void saveUserChallengeResponse(String challengeKey, String userKey, ChallengeResponseModel response){
         mChallengesResponsesReference.child(challengeKey)
                 .child(userKey).setValue(response);
-        mUserDatabaseService.addPointsToUser(userKey,response.earnedPoints);
+        mUserDatabaseService.updateUserMetaAfterChallenge(userKey,response.earnedPoints);
     }
 
     public ChallengeModel getChallenge(String key){

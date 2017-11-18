@@ -7,6 +7,9 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -46,6 +49,7 @@ public class ChallengesFragment extends Fragment implements DataSetUpdatable {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        setHasOptionsMenu(true);
         View fragment = inflater.inflate(R.layout.fragment_challenges, container, false);
 
         mChallengesAdapter = new ChallengesAdapter(mChallengeDatabaseService.mChallenges);
@@ -56,14 +60,23 @@ public class ChallengesFragment extends Fragment implements DataSetUpdatable {
         );
         challengesList.setAdapter(mChallengesAdapter);
 
-        FloatingActionButton addChallenge = (FloatingActionButton) fragment.findViewById(R.id.addChallenge);
-        addChallenge.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mDisplayable.display(CreateChallengeFragment.class,"ChallengesFragment", null);
-            }
-        });
         return fragment;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.default_fragment_menu,menu);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()){
+            case R.id.addNewItem:
+                mDisplayable.display(CreateChallengeFragment.class,"ChallengesFragment", null,getString(R.string.new_challenge),null);
+                break;
+        }
+        return true;
     }
 
     @Override
@@ -112,7 +125,7 @@ public class ChallengesFragment extends Fragment implements DataSetUpdatable {
                     if(mDisplayable != null) {
                         Bundle bundle = new Bundle();
                         bundle.putString("challengeKey",mChallenges.keySet().toArray()[position].toString());
-                        mDisplayable.display(TakeChallengeFragment.class,"ChallengesFragment",bundle);
+                        mDisplayable.display(TakeChallengeFragment.class,"ChallengesFragment",bundle,getString(R.string.wish),null);
                     }
                 }
             });

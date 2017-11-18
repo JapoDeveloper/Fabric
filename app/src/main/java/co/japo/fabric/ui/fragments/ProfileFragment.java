@@ -44,7 +44,6 @@ public class ProfileFragment extends Fragment {
 
     public ProfileFragment() {
         mUserDatabaseService = UserDatabaseService.getInstance();
-        mUserInfo = mUserDatabaseService.getLoggedInUser();
         mCloudStorageService = CloudStorageService.getInstance();
     }
 
@@ -52,6 +51,9 @@ public class ProfileFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        mUserInfo = mUserDatabaseService.getLoggedInUser();
+
         mFragment = inflater.inflate(R.layout.fragment_profile, container, false);
         mPhoto = (ImageView) mFragment.findViewById(R.id.profile_userPhoto);
 
@@ -61,12 +63,23 @@ public class ProfileFragment extends Fragment {
                 .apply(RequestOptions.circleCropTransform())
                 .into(mPhoto);
 
-        ((TextView) mFragment.findViewById(R.id.profile_userName)).setText(mUserInfo.name);
-        ((TextView) mFragment.findViewById(R.id.profile_userEmail)).setText(mUserInfo.email);
-        ((TextView) mFragment.findViewById(R.id.profile_userPhoneNumber)).setText(mUserInfo.phoneNumber);
-        ((TextView) mFragment.findViewById(R.id.profile_userLevel)).setText(mUserInfo.level+"\n"+getString(R.string.level));
-        ((TextView) mFragment.findViewById(R.id.profile_userPoints)).setText(mUserInfo.earnedPoints+"\n"+getString(R.string.points));
-        ((TextView) mFragment.findViewById(R.id.profile_userChallengesCount)).setText(mUserInfo.challengesCompleted+"\n"+getString(R.string.challenges));
+        ((TextView) mFragment.findViewById(R.id.profile_userName))
+                .setText(mUserInfo.name);
+        ((TextView) mFragment.findViewById(R.id.profile_userEmail))
+                .setText(mUserInfo.email);
+        if(mUserInfo.phoneNumber != null && mUserInfo.phoneNumber != "") {
+            ((TextView) mFragment.findViewById(R.id.profile_userPhoneNumber))
+                    .setText(mUserInfo.phoneNumber);
+        }else{
+            ((TextView) mFragment.findViewById(R.id.profile_userPhoneNumber))
+                    .setVisibility(View.GONE);
+        }
+        ((TextView) mFragment.findViewById(R.id.profile_userLevel))
+                .setText(mUserInfo.level);
+        ((TextView) mFragment.findViewById(R.id.profile_userPoints))
+                .setText(mUserInfo.earnedPoints+"");
+        ((TextView) mFragment.findViewById(R.id.profile_userChallengesCount))
+                .setText(mUserInfo.challengesCompleted+"");
 
         FloatingActionButton changeUserPhoto = mFragment.findViewById(R.id.changeUserPhoto);
         changeUserPhoto.setOnClickListener(new View.OnClickListener() {

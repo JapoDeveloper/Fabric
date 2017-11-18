@@ -3,7 +3,7 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="nav_header_vertical_spacing">8dp</dimen>
-    <dimen name="nav_header_height">240dp</dimen>
+    <dimen name="nav_header_height">210dp</dimen>
     <dimen name="margin_fab">16dp</dimen>
 
     <dimen name="default_margin_normal">15dp</dimen>
@@ -17,4 +17,6 @@
 
     <dimen name="design_fab_size_normal" tools:overide="true">56dp</dimen>
     <dimen name="design_fab_size_mini" tools:overide="true">38dp</dimen>
+
+    <dimen name="detail_backdrop_height">256dp</dimen>
 </resources>

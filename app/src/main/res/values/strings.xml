@@ -17,6 +17,7 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="topics">Topics</string>
+    <string name="topic">topic</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
     <string name="championships">Championships</string>
@@ -49,4 +50,8 @@
     <string name="apologize_title">(⌣́_⌣̀)  Sorry!</string>
     <string name="congrats_body">You answered correctly, you won %d points</string>
     <string name="apologize_body">Do not answer correctly, study and luck for the next one.</string>
+    <string name="add_item">Add new item</string>
+    <string name="wish">Good luck!</string>
+    <string name="new_challenge">Create new challenge</string>
+    <string name="notify_user_subscription_success">Congrats! You are %s for %s</string>
 </resources>
